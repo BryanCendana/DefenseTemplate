@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.number }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;600&display=swap');
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background: white !important;
+            }
+            .container {
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f9f9f9;
+            color: #111;
+            margin: 0;
+            padding: 40px;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px; /* Standard A4 width approx */
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        /* --- Header --- */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 1px solid #111;
+            padding-bottom: 30px;
+        }
+
+        .logo-section img {
+            max-height: 70px;
+            margin-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            color: #000;
+        }
+
+        .document-title {
+            margin-top: 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #666;
+        }
+
+        /* --- Meta Info (Invoice #, Date) --- */
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .meta-group h3 {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin: 0 0 5px 0;
+        }
+
+        .meta-group p {
+            font-size: 12px;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* --- Address Grid --- */
+        .address-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+
+        .address-col h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-weight: 400;
+            color: #000;
+        }
+
+        .address-col p {
+            margin: 2px 0;
+            color: #333;
+        }
+
+        /* --- Items Table --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #111;
+            color: #000;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 20px 0;
+            vertical-align: top;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-description {
+            padding-right: 20px;
+        }
+
+        .item-main-text {
+            font-size: 13px;
+            font-weight: 400;
+            color: #000;
+            margin-bottom: 4px;
+        }
+
+        /* --- Elegant Modifier Styling --- */
+        .spec-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+            color: #777;
+            font-size: 10px;
+        }
+        
+        .spec-item {
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .spec-item::before {
+            content: "• ";
+            color: #ccc;
+        }
+        
+        .spec-item:first-child::before {
+            content: "";
+        }
+
+        /* --- Totals --- */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-table {
+            width: 40%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 8px 0;
+            border-bottom: none;
+        }
+
+        .label-col {
+            text-align: left;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .value-col {
+            text-align: right;
+            color: #000;
+            font-weight: 400;
+        }
+
+        .grand-total-row td {
+            padding-top: 15px;
+            border-top: 1px solid #111;
+            font-size: 16px;
+            font-family: 'Cormorant Garamond', serif;
+            color: #000;
+        }
+
+        /* --- Footer --- */
+        .footer {
+            margin-top: 80px;
+            text-align: center;
+            color: #999;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Utilities */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header>
+        <div class="logo-section">
+            {% if order.store.logo %}
+                <img src="{{ order.store.logo.url }}" alt="Store Logo">
+            {% else %}
+                <h1>{{ order.store.name }}</h1>
+            {% endif %}
+        </div>
+        <div class="document-title">Official Invoice</div>
+    </header>
+
+    <div class="meta-bar">
+        <div class="meta-group">
+            <h3>Invoice Number</h3>
+            <p>{{ order.number }}</p>
+        </div>
+        <div class="meta-group">
+            <h3>Date of Issue</h3>
+            <p>{{ order.created|date:"F d, Y" }}</p>
+        </div>
+        <div class="meta-group" style="text-align: right;">
+            <h3>Status</h3>
+            <p>{{ order.get_status_display }}</p>
+        </div>
+    </div>
+
+    <div class="address-grid">
+        <div class="address-col">
+            <h4>Billed To</h4>
+            <p><strong>{{ order.user.name|default:"Guest Customer" }}</strong></p>
+            {% if order.user.mobile_number %}<p>{{ order.user.mobile_number }}</p>{% endif %}
+            {% if order.user.email %}<p>{{ order.user.email }}</p>{% endif %}
+        </div>
+        <div class="address-col">
+            <h4>Issued By</h4>
+            <p><strong>{{ order.store.name }}</strong></p>
+            <p>{{ order.store.address }}</p>
+            <p>NPWP: {{ order.store.npwp|default:"-" }}</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="50%">Description</th>
+                <th width="15%">Quantity</th>
+                <th width="15%" class="text-right">Unit Price</th>
+                <th width="20%" class="text-right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="item-description">
+                    <div class="item-main-text">{{ item.inventory.variant.name }}</div>
+                    
+                    {% if item.notes %}
+                        <div style="font-style: italic; color: #888; font-size: 10px; margin-bottom: 2px;">Note: {{ item.notes }}</div>
+                    {% endif %}
+
+                    <div class="spec-list">
+                        {% if item.prefetched_modifiers %}
+                            {% for mod in item.prefetched_modifiers %}
+                                <span class="spec-item">
+                                    {{ mod.get_modifier }} ({{ mod.value }})
+                                </span>
+                            {% endfor %}
+
+                        {% elif item.modifiers.all %}
+                            {% for mod in item.modifiers.all %}
+                                <span class="spec-item">
+                                    {{ mod.get_modifier|default:mod }}
+                                </span>
+                            {% endfor %}
+
+                        {% elif item.order_modifiers.all %}
+                            {% for mod in item.order_modifiers.all %}
+                                <span class="spec-item">
+                                    {{ mod.get_modifier|default:mod }}
+                                </span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    </td>
+                <td>{{ item.quantity }}</td>
+                <td class="text-right">{{ item.price_per_unit }}</td>
+                <td class="text-right">{{ item.post_discount_subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-section">
+        <table class="totals-table">
+            <tr>
+                <td class="label-col">Subtotal</td>
+                <td class="value-col">{{ order.subtotal }}</td>
+            </tr>
+
+            {% if order.discount_value %}
+            <tr>
+                <td class="label-col">Discount</td>
+                <td class="value-col">- {{ order.discount_value }}</td>
+            </tr>
+            {% endif %}
+
+            {% if order.tax %}
+            <tr>
+                <td class="label-col">Tax</td>
+                <td class="value-col">{{ order.tax }}</td>
+            </tr>
+            {% endif %}
+            
+            {% if order.delivery_fee %}
+            <tr>
+                <td class="label-col">Shipping</td>
+                <td class="value-col">{{ order.delivery_fee }}</td>
+            </tr>
+            {% endif %}
+            
+            {% if order.rounding %}
+            <tr>
+                <td class="label-col">Rounding</td>
+                <td class="value-col">{{ order.rounding }}</td>
+            </tr>
+            {% endif %}
+
+            <tr class="grand-total-row">
+                <td class="label-col">Total</td>
+                <td class="value-col">{{ order.grand_total }}</td>
+            </tr>
+            
+            <tr>
+                <td class="label-col" style="padding-top: 10px;">Payment</td>
+                <td class="value-col" style="padding-top: 10px; font-size: 10px;">{{ order.get_payment_method_display }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Thank you for choosing {{ order.store.name }}</p>
+        {% if order.store.return_policy_url %}
+            <p>For return and exchange policies, please visit our website.</p>
+        {% endif %}
+        <p>Served by {{ order.employee.user.name|default:"Team" }}</p>
+    </div>
+
+</div>
+
+<script>
+    document.title = "invoice_{{ order.number }}";
+    window.print();
+</script>
+</body>
+</html>

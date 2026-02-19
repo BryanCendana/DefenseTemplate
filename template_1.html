@@ -1,0 +1,423 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        :root {
+            /* Starbucks-inspired Palette */
+            --brand-dark-green: #1e3932;
+            --brand-green: #00704a;
+            --brand-brown: #8c6b4a;
+            --brand-cream: #f4f1ea;
+            --brand-white: #ffffff;
+            --text-dark: #2d2d2d;
+            --text-light: #666666;
+            --border-color: #d1d1d1;
+        }
+
+        @media print {
+            @page {
+                margin: 0; 
+            }
+            
+            body {
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                background-color: var(--brand-white) !important;
+            }
+
+            header, footer {
+                display: none;  
+            }
+
+            .totals, .signature, .no-refund {
+                break-inside: avoid;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Cleaner font */
+            font-size: 13px; /* Slightly larger for readability */
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9; /* Light grey bg for screen viewing */
+        }
+
+        /* --- Page Structure --- */
+        
+        .full-width {
+            width: 100%;
+            background-color: var(--brand-white);
+        }
+
+        .invoice-container {
+            width: 800px;
+            margin: 0 auto;
+            padding: 0 40px; /* Side padding */
+            display: flex;
+            flex-direction: column;
+            background-color: var(--brand-white);
+        }
+
+        .header-space {
+            height: 110px; /* Adjusted for taller header */
+        }
+
+        .footer-space {
+            height: 100px;
+        }
+        
+        /* --- Modern Header --- */
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 100px;
+            background-color: var(--brand-cream); /* Cream background */
+            border-bottom: 4px solid var(--brand-dark-green);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 50px; /* Match container padding */
+            z-index: 100;
+        }
+
+        .header img {
+            max-height: 70px;
+            max-width: 180px;
+            object-fit: contain;
+        }
+
+        .header .title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--brand-dark-green);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* --- Footer --- */
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding-bottom: 20px;
+            color: var(--text-light);
+            background-color: var(--brand-white);
+            border-top: 1px solid var(--brand-cream);
+        }
+
+        .footer-info {
+            margin: 0 auto;
+            text-align: center;
+            width: 300px;
+            font-size: 11px;
+            color: var(--brand-brown);
+        }
+
+        .footer-info p {
+            margin: 2px 0;
+        }
+
+        /* --- Details Section (Top Info) --- */
+        
+        .details {
+            margin-top: 10px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--brand-cream);
+            border-radius: 8px; /* Rounded corners */
+            border-left: 5px solid var(--brand-brown);
+        }
+
+        .details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details td {
+            padding: 6px;
+            vertical-align: top;
+            color: var(--text-dark);
+        }
+        
+        .details .label {
+            font-weight: bold;
+            color: var(--brand-dark-green);
+            width: 140px;
+        }
+
+        /* --- Items Table --- */
+
+        .items {
+            margin-bottom: 20px;
+        }
+        
+        .items table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden; /* Needed for border-radius on tables */
+        }
+
+        .items th {
+            background-color: var(--brand-dark-green);
+            color: var(--brand-white);
+            padding: 12px 10px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        .items td {
+            padding: 12px 10px;
+            color: var(--text-dark);
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* Zebra Striping */
+        .items tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        .items tbody tr:hover {
+            background-color: #f0f4f0; /* Slight green tint on print preview hover */
+        }
+
+        /* --- Totals Section --- */
+
+        .totals-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end; /* Align right */
+            margin-bottom: 20px;
+        }
+
+        .totals {
+            width: 50%; /* Compact width */
+        }
+
+        .totals table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 5px; /* Spacing between rows */
+        }
+
+        .totals td {
+            padding: 8px 10px;
+            color: var(--text-dark);
+            border: none; /* Removed grid borders */
+        }
+
+        .totals .label {
+            text-align: right;
+            font-weight: 600;
+            color: var(--text-light);
+            padding-right: 20px;
+        }
+
+        .totals .width-200 {
+            text-align: right;
+            font-family: monospace; /* Better for numbers */
+            font-size: 14px;
+        }
+
+        /* Special styling for Grand Total */
+        .totals tr:nth-child(4) {
+            background-color: var(--brand-green);
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .totals tr:nth-child(4) td {
+            color: white;
+            border-radius: 4px;
+        }
+        
+        /* Balance Due styling */
+        .totals tr:last-child td {
+            border-top: 2px dashed var(--brand-brown);
+            padding-top: 10px;
+            color: var(--brand-brown);
+            font-weight: bold;
+        }
+
+        /* --- Signature & Policy --- */
+
+        .signature {
+            text-align: center;
+            margin-top: 40px;
+            margin-left: auto;
+            width: 250px;
+            color: var(--text-dark);
+        }
+
+        .signature p {
+            margin: 5px 0;
+        }
+        
+        .signature-line {
+            margin-top: 60px;
+            border-bottom: 1px solid var(--text-dark);
+        }
+
+        .no-refund {
+            margin-top: 40px;
+            margin-bottom: 60px;
+            padding: 15px;
+            background-color: #fdf2f2; /* Very light red */
+            border: 1px solid #eecbcb;
+            border-radius: 6px;
+            color: #8a3b3b;
+            font-size: 11px;
+        }
+
+        .no-refund strong {
+            display: block;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            color: #b71c1c;
+        }
+        
+        /* Utility */
+        .width-200 { width: 150px; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ merchant.logo.url }}" alt="Alster Lake Clinic">
+        <div class="title">INVOICE</div>
+    </div>
+
+    <table class="full-width">
+        <thead>
+            <tr>
+                <th>
+                    <td>
+                        <div class="header-space">&nbsp;</div>
+                    </td>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div>
+                        <div class="invoice-container invoice-content">
+                            
+                            <div class="details">
+                                <table>
+                                    <tr>
+                                        <td class="label">No:</td>
+                                        <td><strong>{{ order.number }}</strong></td>
+                                        <td class="label">Date:</td>
+                                        <td>{{ order.created.date|date:"d M, Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Member Name:</td>
+                                        <td>{{ order.user.name }}</td>
+                                        <td class="label">Employee:</td>
+                                        <td>{{ order.employee.user.name }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="items">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Item & Description</th>
+                                            <th style="width: 80px; text-align: center;">Qty</th>
+                                            <th style="width: 150px; text-align: right;">Price</th>
+                                            <th style="width: 150px; text-align: right;">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in items %}
+                                        <tr>
+                                            <td>{{ item.inventory.variant.name }}</td>
+                                            <td style="text-align: center;">{{ item.quantity }}</td>
+                                            <td style="text-align: right;">{{ item.price_per_unit }}</td>
+                                            <td class="width-200" style="text-align: right;">{{ item.subtotal }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="totals-container">
+                                <div class="totals">
+                                    <table>
+                                        <tr>
+                                            <td class="label">Subtotal</td>
+                                            <td class="width-200">{{ order.subtotal }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label">Discount</td>
+                                            <td class="width-200" style="color: #b71c1c;">{{ order.discount_value }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label">VAT (PPN)</td>
+                                            <td class="width-200">{{ order.tax }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label" style="color: white;">Grand Total</td>
+                                            <td class="width-200">{{ order.grand_total }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label">Payment</td>
+                                            <td class="width-200">{{ paid_amount }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="label">Balance Due</td>
+                                            <td class="width-200">{{ balance_due }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="signature">
+                                <p style="font-size: 10px; color: #999;">materai 10.000</p>
+                                <div class="signature-line"></div>
+                                <p style="margin-top: 10px; font-weight: bold;">FINANCE</p>
+                                <p style="font-size: 11px;">(Authorized Signature)</p>
+                            </div>
+
+                            <div class="no-refund">
+                                <strong>No Refund Policy</strong>
+                                <p>All sales are final. We do not offer refunds or cancellations. Please carefully review your order before confirming your purchase as no exceptions will be made unless otherwise specified in writing by Alster Lake Clinic.</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div class="footer-info">
+            <p><strong>PT Stampindo Lancar Jaya</strong></p>
+            <p>Meruya Selatan<br>
+                Jakarta Barat<br>
+                Indonesia
+            </p>
+            <p style="margin-top: 5px;">Stamps Copyright 2025</p>
+        </div>
+    </div>
+</body>
+<script>
+    document.title = "invoice_{{ order.number }}_{{ order.created.date|date:'d-M-Y' }}";
+    window.print();
+</script>
+</html>

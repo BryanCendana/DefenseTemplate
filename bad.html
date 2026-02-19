@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.number }}</title>
+    <style>
+        /* 1. THE BAD FONTS */
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            /* 2. THE DIZZYING BACKGROUND */
+            background-image: repeating-linear-gradient(45deg, #ffff00 0px, #ffff00 10px, #ffff99 10px, #ffff99 20px);
+            color: blue;
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { -webkit-print-color-adjust: exact !important; }
+        }
+
+        .container {
+            width: 95%; /* Too wide */
+            margin: 10px auto;
+            background-color: #0000FF; /* Blue background */
+            border: 10px dashed #FF0000; /* Red dashed border */
+            padding: 5px; /* Not enough padding */
+        }
+
+        /* 3. STRETCHED LOGO */
+        .logo {
+            width: 300px;
+            height: 150px; /* Forces aspect ratio distortion */
+            object-fit: fill; /* Squishes the image */
+            background: white;
+            border: 5px ridge gold;
+        }
+
+        /* 4. POOR HIERARCHY */
+        h1 {
+            font-family: 'Impact', sans-serif;
+            color: #00FF00; /* Neon Green */
+            text-shadow: 4px 4px #FF00FF; /* Magenta Drop Shadow */
+            font-size: 50px;
+            text-align: center;
+            letter-spacing: -3px; /* Text touching */
+            margin: 0;
+        }
+
+        .info-dump {
+            background-color: #FF00FF; /* Magenta box */
+            color: #FFFF00; /* Yellow text on Magenta (Hard to read) */
+            padding: 0;
+            text-align: center;
+            border: 3px solid black;
+            margin-bottom: 20px;
+        }
+
+        /* 5. THE UGLY TABLE */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 5px; /* Weird gaps between cells */
+            background-color: lime;
+        }
+
+        th {
+            background-color: red;
+            color: black;
+            font-size: 20px;
+            transform: rotate(-2deg); /* Tilted headers */
+            border: 3px outset white;
+        }
+
+        td {
+            background-color: orange;
+            color: blue;
+            border: 2px inset gray;
+            padding: 0; /* Text touches the border! */
+            text-align: center; /* Center aligning lists is bad for reading */
+            font-weight: bold;
+        }
+
+        /* 6. MODIFIERS THAT ARE HARD TO READ */
+        .mods {
+            background-color: black;
+            color: white;
+            font-size: 8px; /* Too small */
+            text-align: justify;
+        }
+
+        /* 7. TOTALS THAT DON'T ALIGN */
+        .totals-area {
+            background: url('https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif'); /* Using a distracting pattern if possible, or just noise */
+            background-color: cyan;
+            text-align: left;
+            padding: 50px;
+            font-size: 14px;
+            border-top: 20px solid purple;
+        }
+
+        .grand-total {
+            font-size: 12px; /* Grand total is smaller than header? Bad hierarchy */
+            color: red;
+            text-decoration: underline overline;
+        }
+
+        .footer-msg {
+            text-align: right;
+            font-size: 30px;
+            color: purple;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div style="text-align: center;">
+            {% if order.store.logo %}
+                <img src="{{ order.store.logo.url }}" class="logo" alt="Logo">
+            {% else %}
+                <h1>{{ order.store.name }}</h1>
+            {% endif %}
+        </div>
+
+        <h1>INVOICE 4 U!!!</h1>
+
+        <div class="info-dump">
+            <p><strong>Order #:</strong> {{ order.number }}</p>
+            <p><strong>Date:</strong> {{ order.created }}</p>
+            <p><strong>Status:</strong> {{ order.get_status_display }}</p>
+            <p><strong>Customer:</strong> {{ order.user.name }}</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>STUFF U BOUGHT</th>
+                    <th>HOW MANY?</th>
+                    <th>COST $$</th>
+                    <th>MATH (TOTAL)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        {{ item.inventory.variant.name }}
+                        <br>
+                        <div class="mods">
+                            {% if item.prefetched_modifiers %}
+                                (MODS: 
+                                {% for mod in item.prefetched_modifiers %}
+                                    {{ mod.get_modifier }} [{{mod.value}}] 
+                                {% endfor %}
+                                )
+                            {% elif item.modifiers.all %}
+                                {% for mod in item.modifiers.all %}
+                                   >> {{ mod.get_modifier }}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>-- {{ item.quantity }} --</td>
+                    <td>{{ item.price_per_unit }}</td>
+                    <td>{{ item.post_discount_subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals-area">
+            <p>Subtotal: {{ order.subtotal }}</p>
+            <p>Tax: {{ order.tax }}</p>
+            <p>Discount: {{ order.discount_value }}</p>
+            
+            <div class="grand-total">
+                PAY THIS AMOUNT NOW: {{ order.grand_total }}
+            </div>
+        </div>
+
+        <div class="footer-msg">
+            NO REFUNDS EVER.<br>
+            Have a "nice" day.
+        </div>
+
+    </div>
+
+    <script>
+        document.title = "invoice_{{ order.number }}";
+        window.print();
+    </script>
+</body>
+</html>

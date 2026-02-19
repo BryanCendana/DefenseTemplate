@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.number }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+
+        :root {
+            /* Bright & Colorful Palette */
+            --c-orange: #ff7e5f;
+            --c-yellow: #feb47b;
+            --c-teal: #00b09b;
+            --c-green: #96c93d;
+            --c-text: #2d3436;
+            --c-light-bg: #fff5f5;
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background: white !important;
+            }
+            .invoice-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            /* Hide the fallback debug text if you want, usually not needed if logic works */
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, var(--c-light-bg) 0%, #fff 100%);
+            margin: 0;
+            padding: 30px;
+            color: var(--c-text);
+            font-size: 13px;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        /* --- Colorful Header --- */
+        .header {
+            background: linear-gradient(to right, var(--c-orange), var(--c-yellow));
+            padding: 40px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .brand img {
+            max-height: 80px;
+            background: white;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .invoice-tag {
+            text-align: right;
+        }
+
+        .invoice-tag .big-text {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .invoice-tag .sub-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* --- Info Bubbles --- */
+        .info-row {
+            display: flex;
+            gap: 20px;
+            padding: 30px 40px 10px 40px;
+        }
+
+        .bubble {
+            flex: 1;
+            background: #fdfdfd;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .bubble-title {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: white;
+            padding: 0 10px;
+            font-weight: 700;
+            color: var(--c-teal);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .bubble p { margin: 4px 0; }
+        .highlight { color: var(--c-orange); font-weight: 700; }
+
+        /* --- Items Table --- */
+        .table-section {
+            padding: 20px 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 11px;
+            color: #b2bec3;
+            text-transform: uppercase;
+            padding: 0 10px;
+        }
+
+        td {
+            padding: 15px 10px;
+            background: white;
+            border-bottom: 2px solid #f5f6fa;
+            vertical-align: top;
+        }
+
+        .item-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--c-text);
+        }
+
+        /* --- Modifier Styling (The Complete Order Look) --- */
+        .modifier-block {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background-color: rgba(0, 176, 155, 0.08); /* Light Teal tint */
+            border-radius: 6px;
+            border-left: 3px solid var(--c-teal);
+            font-size: 12px;
+            color: #006b5e;
+        }
+
+        .modifier-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .modifier-qty {
+            font-weight: 700;
+            margin-right: 6px;
+            background: white;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        .note-text {
+            display: block;
+            margin-top: 4px;
+            font-style: italic;
+            color: #b2bec3;
+            font-size: 11px;
+        }
+
+        /* --- Footer & Totals --- */
+        .footer {
+            background: #fafafa;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .aggregator-info {
+            background: var(--c-text);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            width: 45%;
+            font-size: 12px;
+        }
+
+        .totals-box {
+            width: 45%;
+        }
+
+        .t-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .t-grand {
+            border-top: 2px dashed #ccc;
+            margin-top: 15px;
+            padding-top: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--c-orange);
+        }
+
+        .status-pill {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+    </style>
+</head>
+<body>
+
+<div class="invoice-container">
+    
+    <div class="header">
+        <div class="brand">
+            {% if order.store.logo %}
+                <img src="{{ order.store.logo.url }}" alt="Logo">
+            {% else %}
+                <h1>{{ order.store.name }}</h1>
+            {% endif %}
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">{{ order.store.address }}</div>
+        </div>
+        <div class="invoice-tag">
+            <div class="big-text">INVOICE</div>
+            <div class="sub-text">#{{ order.number }}</div>
+            <div class="status-pill">{{ order.get_status_display }}</div>
+        </div>
+    </div>
+
+    <div class="info-row">
+        <div class="bubble">
+            <span class="bubble-title">Customer</span>
+            <p class="highlight">{{ order.user.name|default:"Guest" }}</p>
+            {% if order.user.mobile_number %}<p>📱 {{ order.user.mobile_number }}</p>{% endif %}
+            {% if order.type == OrderType.DINE_IN %}
+                <p>Table: <span class="highlight">{{ order.table_number|default:"-" }}</span></p>
+            {% else %}
+                <p>Order Type: {{ order.get_type_display }}</p>
+            {% endif %}
+        </div>
+        <div class="bubble">
+            <span class="bubble-title">Details</span>
+            <p>Date: {{ order.created|date:"d M Y, H:i" }}</p>
+            <p>Staff: {{ order.employee.user.name|default:"-" }}</p>
+            <p>Payment: {{ order.get_payment_method_display }}</p>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <table>
+            <thead>
+                <tr>
+                    <th width="50%">Item & Customization</th>
+                    <th width="10%" class="text-center">Qty</th>
+                    <th width="20%" class="text-right">Price</th>
+                    <th width="20%" class="text-right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div class="item-name">{{ item.inventory.variant.name }}</div>
+                        
+                        {% if item.notes %}
+                            <span class="note-text">Note: {{ item.notes }}</span>
+                        {% endif %}
+
+                        {% if item.prefetched_modifiers %}
+                            <div class="modifier-block">
+                                {% for item_modifier in item.prefetched_modifiers %}
+                                    <div class="modifier-row">
+                                        <span class="modifier-qty">{{ item_modifier.value }}x</span>
+                                        <span>{{ item_modifier.get_modifier }}</span>
+                                    </div>
+                                    {% if item_modifier.prefetched_modifier_children %}
+                                        <div style="padding-left: 20px; font-size: 11px; opacity: 0.8;">
+                                            {% for child in item_modifier.prefetched_modifier_children %}
+                                                <div>+ {{ child.value }}x {{ child.get_modifier }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                        {% elif item.modifiers.all %}
+                            <div class="modifier-block">
+                                {% for item_modifier in item.modifiers.all %}
+                                    <div class="modifier-row">
+                                        <span class="modifier-qty">{{ item_modifier.value|default:"1" }}x</span>
+                                        <span>{{ item_modifier.get_modifier|default:item_modifier }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                        {% elif item.order_modifiers.all %}
+                            <div class="modifier-block">
+                                {% for item_modifier in item.order_modifiers.all %}
+                                    <div class="modifier-row">
+                                        <span class="modifier-qty">{{ item_modifier.value|default:"1" }}x</span>
+                                        <span>{{ item_modifier.get_modifier|default:item_modifier }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        </td>
+                    <td class="text-center"><strong>{{ item.quantity }}</strong></td>
+                    <td class="text-right">{{ item.price_per_unit }}</td>
+                    <td class="text-right"><strong>{{ item.post_discount_subtotal }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        
+        {% if order.aggregator_metadata %}
+            <div class="aggregator-info">
+                <div style="text-transform: uppercase; font-weight: 700; margin-bottom: 5px; color: var(--c-yellow);">Online Order</div>
+                <div>App: {{ order.aggregator_metadata.get_type_display }}</div>
+                <div>Driver: {{ order.aggregator_metadata.driver_name|default:"Searching..." }}</div>
+                <div style="margin-top: 5px; font-size: 14px;">PIN: <span style="background: white; color: black; padding: 2px 6px; border-radius: 4px;">{{ order.aggregator_metadata.pickup_pin|default:"-" }}</span></div>
+            </div>
+        {% else %}
+            <div style="width: 45%; font-size: 11px; color: #aaa;">
+                <p>Thank you for visiting!</p>
+                <p>{{ order.store.name }}<br>{{ order.store.address }}</p>
+            </div>
+        {% endif %}
+
+        <div class="totals-box">
+            <div class="t-row">
+                <span>Subtotal</span>
+                <span>{{ order.subtotal }}</span>
+            </div>
+            
+            {% if order.discount_value %}
+            <div class="t-row" style="color: #d63031;">
+                <span>Discount</span>
+                <span>- {{ order.discount_value }}</span>
+            </div>
+            {% endif %}
+
+            {% if order.service_charge %}
+            <div class="t-row">
+                <span>Service Charge</span>
+                <span>{{ order.service_charge }}</span>
+            </div>
+            {% endif %}
+            
+            {% if order.delivery_fee %}
+            <div class="t-row">
+                <span>Delivery Fee</span>
+                <span>{{ order.delivery_fee }}</span>
+            </div>
+            {% endif %}
+
+            {% if order.tax %}
+            <div class="t-row">
+                <span>Tax</span>
+                <span>{{ order.tax }}</span>
+            </div>
+            {% endif %}
+            
+            {% if order.rounding %}
+            <div class="t-row">
+                <span>Rounding</span>
+                <span>{{ order.rounding }}</span>
+            </div>
+            {% endif %}
+
+            <div class="t-row t-grand">
+                <span>Total</span>
+                <span>{{ order.grand_total }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.title = "invoice_{{ order.number }}";
+    window.print();
+</script>
+</body>
+</html>

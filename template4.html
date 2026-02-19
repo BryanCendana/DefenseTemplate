@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ order.number }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap');
+
+        :root {
+            --sidebar-bg: #1a2533; /* Midnight Navy */
+            --sidebar-text: #ecf0f1;
+            --accent: #c5a065; /* Copper Gold */
+            --text-main: #2c3e50;
+            --text-light: #95a5a6;
+            --line-color: #eee;
+        }
+
+        @media print {
+            @page { margin: 0; }
+            body { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                margin: 0;
+            }
+            .container {
+                min-height: 100vh; /* Force full height for background */
+            }
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #f4f4f4; /* Grey for screen background */
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            min-height: 100vh; /* Full height layout */
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- LEFT SIDEBAR (Dark) --- */
+        .sidebar {
+            width: 32%;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-area img {
+            max-width: 140px;
+            max-height: 80px;
+            filter: brightness(0) invert(1); /* Make logo white if transparent */
+        }
+        
+        .logo-fallback {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--accent);
+        }
+
+        .sidebar-block h3 {
+            color: var(--accent);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(197, 160, 101, 0.3);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-block p {
+            margin: 4px 0;
+            line-height: 1.4;
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .highlight-text {
+            font-weight: 700;
+            color: white;
+        }
+
+        /* Aggregator Card in Sidebar */
+        .online-order-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .online-order-card .pin {
+            font-size: 18px;
+            color: var(--accent);
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* --- RIGHT CONTENT (Light) --- */
+        .main-content {
+            width: 68%;
+            padding: 40px;
+            background: white;
+            position: relative;
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+            border-bottom: 4px solid var(--sidebar-bg);
+            padding-bottom: 20px;
+        }
+
+        .title-invoice {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            color: var(--sidebar-bg);
+            line-height: 1;
+        }
+
+        .invoice-meta {
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line-color);
+        }
+
+        td {
+            padding: 15px 0;
+            vertical-align: top;
+            border-bottom: 1px dashed var(--line-color);
+        }
+
+        .item-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--sidebar-bg);
+        }
+
+        /* Modifier Styling */
+        .modifier-list {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #7f8c8d;
+            padding-left: 0;
+        }
+        .modifier-item {
+            display: block;
+            margin-bottom: 2px;
+        }
+        .modifier-qty {
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 4px;
+        }
+
+        /* Totals */
+        .totals-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-table {
+            width: 50%;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+        }
+
+        .total-row span:first-child {
+            color: var(--text-light);
+        }
+
+        .total-row span:last-child {
+            font-weight: 600;
+            color: var(--sidebar-bg);
+        }
+
+        .grand-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--sidebar-bg);
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--sidebar-bg);
+            font-weight: 700;
+        }
+
+        .status-stamp {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transform: rotate(-10deg);
+            opacity: 0.3;
+            font-size: 16px;
+        }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="sidebar">
+        <div class="logo-area">
+            {% if order.store.logo %}
+                <img src="{{ order.store.logo.url }}" alt="Logo">
+            {% else %}
+                <div class="logo-fallback">{{ order.store.name }}</div>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-block">
+            <h3>Merchant Info</h3>
+            <p class="highlight-text">{{ order.store.name }}</p>
+            <p>{{ order.store.address }}</p>
+            {% if order.store.phone %}<p>Tel: {{ order.store.phone }}</p>{% endif %}
+            <p>NPWP: {{ order.store.npwp|default:"-" }}</p>
+        </div>
+
+        <div class="sidebar-block">
+            <h3>Customer</h3>
+            <p class="highlight-text">{{ order.user.name|default:"Guest" }}</p>
+            {% if order.user.mobile_number %}<p>{{ order.user.mobile_number }}</p>{% endif %}
+            {% if order.user.email %}<p>{{ order.user.email }}</p>{% endif %}
+        </div>
+
+        <div class="sidebar-block">
+            <h3>Order Details</h3>
+            <p>Type: {{ order.get_type_display }}</p>
+            {% if order.type == OrderType.DINE_IN %}
+                <p>Table: <span class="highlight-text">{{ order.table_number }}</span></p>
+            {% endif %}
+            <p>Staff: {{ order.employee.user.name|default:"-" }}</p>
+        </div>
+
+        {% if order.aggregator_metadata %}
+        <div class="sidebar-block">
+            <div class="online-order-card">
+                <h3>Online Order</h3>
+                <p>App: {{ order.aggregator_metadata.get_type_display }}</p>
+                <p>Driver: {{ order.aggregator_metadata.driver_name|default:"-" }}</p>
+                <span class="pin">PIN: {{ order.aggregator_metadata.pickup_pin|default:"-" }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="main-content">
+        
+        <div class="header-main">
+            <div class="title-invoice">INVOICE</div>
+            <div class="invoice-meta">
+                <div><strong>No: {{ order.number }}</strong></div>
+                <div>Date: {{ order.created|date:"F d, Y" }}</div>
+                <div>Time: {{ order.created|date:"H:i" }}</div>
+            </div>
+        </div>
+
+        <div class="status-stamp">{{ order.get_status_display }}</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th width="50%">Description</th>
+                    <th width="10%" class="text-center">Qty</th>
+                    <th width="20%" class="text-right">Unit Price</th>
+                    <th width="20%" class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <div class="item-title">{{ item.inventory.variant.name }}</div>
+                        
+                        {% if item.notes %}
+                            <div style="font-style:italic; font-size:10px; margin-top:2px;">Note: {{ item.notes }}</div>
+                        {% endif %}
+
+                        <div class="modifier-list">
+                            {% if item.prefetched_modifiers %}
+                                {% for mod in item.prefetched_modifiers %}
+                                    <span class="modifier-item">
+                                        <span class="modifier-qty">+{{ mod.value }}</span> {{ mod.get_modifier }}
+                                        {% if mod.prefetched_modifier_children %}
+                                            {% for child in mod.prefetched_modifier_children %}
+                                                ( +{{ child.value }} {{ child.get_modifier }} )
+                                            {% endfor %}
+                                        {% endif %}
+                                    </span>
+                                {% endfor %}
+
+                            {% elif item.modifiers.all %}
+                                {% for mod in item.modifiers.all %}
+                                    <span class="modifier-item">
+                                        <span class="modifier-qty">+{{ mod.value|default:"1" }}</span> {{ mod.get_modifier|default:mod }}
+                                    </span>
+                                {% endfor %}
+
+                            {% elif item.order_modifiers.all %}
+                                {% for mod in item.order_modifiers.all %}
+                                    <span class="modifier-item">
+                                        <span class="modifier-qty">+{{ mod.value|default:"1" }}</span> {{ mod.get_modifier|default:mod }}
+                                    </span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        </td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.price_per_unit }}</td>
+                    <td class="text-right">{{ item.post_discount_subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals-wrapper">
+            <div class="totals-table">
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <span>{{ order.subtotal }}</span>
+                </div>
+
+                {% if order.discount_value %}
+                <div class="total-row" style="color: #e74c3c;">
+                    <span>Discount</span>
+                    <span>- {{ order.discount_value }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.service_charge %}
+                <div class="total-row">
+                    <span>Service Charge</span>
+                    <span>{{ order.service_charge }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.takeaway_fee %}
+                <div class="total-row">
+                    <span>Takeaway Fee</span>
+                    <span>{{ order.takeaway_fee }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.delivery_fee %}
+                <div class="total-row">
+                    <span>Delivery Fee</span>
+                    <span>{{ order.delivery_fee }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.tax %}
+                <div class="total-row">
+                    <span>Tax</span>
+                    <span>{{ order.tax }}</span>
+                </div>
+                {% endif %}
+
+                {% if order.rounding %}
+                <div class="total-row">
+                    <span>Rounding</span>
+                    <span>{{ order.rounding }}</span>
+                </div>
+                {% endif %}
+
+                <div class="total-row grand-total">
+                    <span>Total Due</span>
+                    <span>{{ order.grand_total }}</span>
+                </div>
+
+                <div class="total-row" style="margin-top:10px; font-size:11px;">
+                    <span>Payment Method</span>
+                    <span>{{ order.get_payment_method_display }}</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.title = "invoice_{{ order.number }}";
+    window.print();
+</script>
+</body>
+</html>
