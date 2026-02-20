@@ -8,10 +8,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap');
 
         :root {
-            --sidebar-bg: #1a2533; /* Midnight Navy */
+            --sidebar-bg: #1a2533;
             --sidebar-text: #ecf0f1;
-            --accent: #c5a065; /* Copper Gold */
-            --text-main: #2c3e50;
+            --accent: #c5a065; 
             --text-light: #95a5a6;
             --line-color: #eee;
         }
@@ -24,13 +23,13 @@
                 margin: 0;
             }
             .container {
-                min-height: 100vh; /* Force full height for background */
+                min-height: 100vh; 
             }
         }
 
         body {
             font-family: 'Lato', sans-serif;
-            background-color: #f4f4f4; /* Grey for screen background */
+            background-color: #f4f4f4; 
             margin: 0;
             padding: 0;
             color: var(--text-main);
@@ -42,11 +41,10 @@
             margin: 0 auto;
             background: white;
             display: flex;
-            min-height: 100vh; /* Full height layout */
+            min-height: 100vh; 
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
 
-        /* --- LEFT SIDEBAR (Dark) --- */
         .sidebar {
             width: 32%;
             background-color: var(--sidebar-bg);
@@ -65,7 +63,7 @@
         .logo-area img {
             max-width: 140px;
             max-height: 80px;
-            filter: brightness(0) invert(1); /* Make logo white if transparent */
+            filter: brightness(0) invert(1);
         }
         
         .logo-fallback {
@@ -96,7 +94,6 @@
             color: white;
         }
 
-        /* Aggregator Card in Sidebar */
         .online-order-card {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--accent);
@@ -112,7 +109,6 @@
             margin-top: 5px;
         }
 
-        /* --- RIGHT CONTENT (Light) --- */
         .main-content {
             width: 68%;
             padding: 40px;
@@ -142,7 +138,6 @@
             color: var(--text-light);
         }
 
-        /* Table Styling */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -171,7 +166,6 @@
             color: var(--sidebar-bg);
         }
 
-        /* Modifier Styling */
         .modifier-list {
             margin-top: 5px;
             font-size: 11px;
@@ -188,7 +182,6 @@
             margin-right: 4px;
         }
 
-        /* Totals */
         .totals-wrapper {
             width: 100%;
             display: flex;
